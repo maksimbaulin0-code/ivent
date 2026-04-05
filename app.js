@@ -1,7 +1,7 @@
 const tg = window.Telegram.WebApp;
 // Укажи здесь URL для проверки наличия билета
-const CHECK_TICKET_URL = 'https://scarface.app.n8n.cloud/webhook-test/4958d6af-6db7-4428-bffc-cf0b60d9d6c5'; 
-const REGISTER_URL = 'https://scarface.app.n8n.cloud/webhook-test/1f3233b3-ddc9-41d2-accc-e473577743fa';
+const CHECK_TICKET_URL = 'https://scarface.app.n8n.cloud/webhook/4958d6af-6db7-4428-bffc-cf0b60d9d6c5'; 
+const REGISTER_URL = 'https://scarface.app.n8n.cloud/webhook/1f3233b3-ddc9-41d2-accc-e473577743fa';
 
 tg.expand();
 
