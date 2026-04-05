@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Club Pass</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <div id="app">
+        <section id="user-view">
+            <header class="event-header">
+                <div class="badge">Next Event</div>
+                <h1 id="display-title">NEON NIGHTS</h1>
+                <p id="display-desc">Techno & Industrial set by Resident DJs. Entrance by guestlist only.</p>
+                <div class="event-info">
+                    <span id="display-date">📅 12 апреля, 23:00</span>
+                    <span id="display-location">📍 UNDERGROUND CLUB</span>
+                </div>
+            </header>
+
+            <form id="pass-form">
+                <div class="input-group">
+                    <label>Дата рождения</label>
+                    <input type="date" id="birth-date" required>
+                    <small id="age-error" class="error-msg">Вам должно быть 18 лет</small>
+                </div>
+
+                <div class="input-group">
+                    <label>Номер телефона</label>
+                    <input type="tel" id="phone" placeholder="+7 (999) 000-00-00" required>
+                </div>
+
+                <button type="submit" id="submit-btn" disabled>ПОЛУЧИТЬ ПРОХОДКУ</button>
+            </form>
+        </section>
+
+        <section id="admin-view" class="hidden">
+            <h2>Админ-панель</h2>
+            <div class="admin-form">
+                <input type="text" id="edit-title" placeholder="Название мероприятия">
+                <textarea id="edit-desc" placeholder="Описание"></textarea>
+                <input type="text" id="edit-date" placeholder="Дата и время">
+                <button onclick="updateEvent()">ОБНОВИТЬ ИВЕНТ</button>
+                <button class="secondary" onclick="toggleAdmin()">НАЗАД</button>
+            </div>
+        </section>
+
+        <button id="admin-toggle" onclick="toggleAdmin()">⚙️</button>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
