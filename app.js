@@ -1,85 +1,61 @@
 const tg = window.Telegram.WebApp;
-const N8N_WEBHOOK_URL = 'https://scarface.app.n8n.cloud/webhook-test/4958d6af-6db7-4428-bffc-cf0b60d9d6c5'; // Подставь свой URL
+const N8N_URL = 'https://scarface.app.n8n.cloud/webhook-test/4958d6af-6db7-4428-bffc-cf0b60d9d6c5';
 
 tg.expand();
 
-// 1. ИСПРАВЛЕННАЯ Функция переключения вкладок
 function switchView(viewId, el) {
-    // Скрываем все views в #app-content
     document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
-    // Показываем нужную
     document.getElementById('view-' + viewId).classList.remove('hidden');
-    
-    // Обновляем активный класс в навигации
     document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
     el.classList.add('active');
-    
-    // Легкая вибрация при клике
     tg.HapticFeedback.impactOccurred('light');
 }
 
-// 2. Логика валидации возраста (18+)
-const birthInput = document.getElementById('birth-date');
-const submitBtn = document.getElementById('submit-btn');
-const ageError = document.getElementById('age-error');
-
-function calculateAge(birthday) {
-    const ageDifMs = Date.now() - birthday.getTime();
-    const ageDate = new Date(ageDifMs);
-    return Math.abs(ageDate.getUTCFullYear() - 1970);
-}
-
-birthInput.addEventListener('change', (e) => {
-    if (!e.target.value) return;
-    
+// Проверка 18+ без вывода текста
+document.getElementById('birth-date').addEventListener('change', (e) => {
     const birthDate = new Date(e.target.value);
-    if (calculateAge(birthDate) >= 18) {
-        // Успех
-        submitBtn.disabled = false;
-        ageError.style.display = 'none';
-        birthInput.style.borderColor = '#333';
-    } else {
-        // Ошибка
-        submitBtn.disabled = true;
-        ageError.style.display = 'block';
-        birthInput.style.borderColor = 'red';
-    }
+    const age = new Date().getFullYear() - birthDate.getFullYear();
+    document.getElementById('submit-btn').disabled = (age < 18);
 });
 
-// 3. Отправка вебхука (username + телефон + имя)
 document.getElementById('pass-form').onsubmit = async (e) => {
     e.preventDefault();
-    
-    if (submitBtn.disabled) return;
-    submitBtn.innerText = 'ОТПРАВКА...';
-
-    const userData = tg.initDataUnsafe?.user || {};
-    
-    // Формируем payload. Username будет id_XXX, если юзернейма нет.
+    const user = tg.initDataUnsafe?.user || {};
     const payload = {
-        username: userData.username || `id_${userData.id || 'unknown'}`,
-        first_name: userData.first_name || 'Guest',
-        last_name: userData.last_name || '',
+        username: user.username || `id_${user.id || 'unknown'}`,
         phone: document.getElementById('phone').value,
-        dob: birthInput.value,
+        dob: document.getElementById('birth-date').value,
         event: document.getElementById('display-title').innerText
     };
 
     try {
-        const response = await fetch(N8N_WEBHOOK_URL, {
+        const res = await fetch(N8N_URL, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(payload)
         });
-
-        if (response.ok) {
-            tg.showAlert('Заявка принята! Ждем тебя.');
+        if(res.ok) {
+            tg.showAlert("Готово! Проходка забронирована.");
             tg.close();
-        } else {
-            throw new Error('Server error');
         }
-    } catch (error) {
-        tg.showAlert('Ошибка отправки. Попробуй позже.');
-        submitBtn.innerText = 'ПОЛУЧИТЬ ПРОХОДКУ';
-    }
+    } catch (e) { tg.showAlert("Ошибка сети"); }
 };
+
+// Админка
+function toggleAdminPanel() { document.getElementById('admin-panel').classList.toggle('hidden'); }
+function updateEventData() {
+    const t = document.getElementById('edit-title').value;
+    const d = document.getElementById('edit-desc').value;
+    const dt = document.getElementById('edit-date').value;
+    if(t) document.getElementById('display-title').innerText = t;
+    if(d) document.getElementById('display-desc').innerText = d;
+    if(dt) document.getElementById('display-date').innerText = "📅 " + dt;
+    toggleAdminPanel();
+}
+
+// Данные профиля
+if(tg.initDataUnsafe?.user) {
+    const u = tg.initDataUnsafe.user;
+    document.getElementById('user-full-name').innerText = u.first_name + (u.last_name ? " " + u.last_name : "");
+    document.getElementById('user-handle').innerText = u.username ? "@" + u.username : "ID: " + u.id;
+}
