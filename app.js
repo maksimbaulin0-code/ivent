@@ -1,59 +1,81 @@
-const tg = window.Telegram.WebApp;
-tg.expand();
-
-// Элементы управления
-const birthInput = document.getElementById('birth-date');
-const submitBtn = document.getElementById('submit-btn');
-const errorMsg = document.getElementById('age-error');
-
-// 1. Проверка возраста (18+)
-birthInput.addEventListener('change', (e) => {
-    const birthDate = new Date(e.target.value);
-    const today = new Date();
+// Переключение экранов
+function switchView(viewId, el) {
+    // Скрываем все экраны
+    document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
+    // Показываем нужный
+    document.getElementById('view-' + viewId).classList.remove('hidden');
     
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
+    // Активная кнопка в меню
+    document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+    el.classList.add('active');
     
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-        age--;
-    }
-
-    if (age >= 18) {
-        submitBtn.disabled = false;
-        errorMsg.style.display = 'none';
-        birthInput.style.borderColor = '#333';
-    } else {
-        submitBtn.disabled = true;
-        errorMsg.style.display = 'block';
-        birthInput.style.borderColor = 'red';
-    }
-});
-
-// 2. Логика Админ-панели
-function toggleAdmin() {
-    document.getElementById('user-view').classList.toggle('hidden');
-    document.getElementById('admin-view').classList.toggle('hidden');
+    tg.HapticFeedback.impactOccurred('light');
 }
 
-function updateEvent() {
-    const newTitle = document.getElementById('edit-title').value;
-    const newDesc = document.getElementById('edit-desc').value;
-    const newDate = document.getElementById('edit-date').value;
+// Система проверки билетов
+const TicketSystem = {
+    storageKey: 'user_ticket_data',
 
-    if(newTitle) document.getElementById('display-title').innerText = newTitle;
-    if(newDesc) document.getElementById('display-desc').innerText = newDesc;
-    if(newDate) document.getElementById('display-date').innerText = "📅 " + newDate;
+    saveTicket(data) {
+        localStorage.setItem(this.storageKey, JSON.stringify(data));
+        this.render();
+    },
 
-    toggleAdmin(); // Возвращаемся к просмотру
-}
+    getTicket() {
+        const raw = localStorage.getItem(this.storageKey);
+        if (!raw) return null;
+        
+        const ticket = JSON.parse(raw);
+        // ПРОВЕРКА: Удаление если дата прошла
+        const eventDate = new Date(ticket.eventDateRaw); 
+        if (eventDate < new Date().setHours(0,0,0,0)) {
+            this.deleteTicket();
+            return null;
+        }
+        return ticket;
+    },
 
-// 3. Отправка данных в бота
-document.getElementById('pass-form').onsubmit = (e) => {
-    e.preventDefault();
-    const data = {
-        phone: document.getElementById('phone').value,
-        dob: birthInput.value,
-        event: document.getElementById('display-title').innerText
-    };
-    tg.sendData(JSON.stringify(data));
+    deleteTicket() {
+        localStorage.removeItem(this.storageKey);
+        this.render();
+    },
+
+    render() {
+        const container = document.getElementById('tickets-container');
+        const ticket = this.getTicket();
+        const form = document.getElementById('pass-form');
+
+        if (ticket) {
+            form.innerHTML = `<div class="info-box">У вас уже есть активный билет на этот ивент.</div>`;
+            container.innerHTML = `
+                <div class="active-ticket">
+                    <span class="ticket-status">CONFIRMED</span>
+                    <h3>${ticket.eventTitle}</h3>
+                    <p>${ticket.eventDate}</p>
+                    <div style="margin-top:15px; font-family: monospace;">ID: ${Math.random().toString(36).substr(2, 9).toUpperCase()}</div>
+                </div>
+                <button class="btn-secondary" style="margin-top:20px" onclick="TicketSystem.deleteTicket()">ОТМЕНИТЬ БИЛЕТ</button>
+            `;
+        }
+    }
 };
+
+// При загрузке
+window.onload = () => {
+    TicketSystem.render();
+    
+    // Заполняем профиль из TG
+    if(tg.initDataUnsafe.user) {
+        document.getElementById('user-full-name').innerText = tg.initDataUnsafe.user.first_name;
+        document.getElementById('user-handle').innerText = '@' + tg.initDataUnsafe.user.username;
+    }
+};
+
+// В функции отправки формы (в блоке успеха n8n):
+// if (response.ok) {
+//    TicketSystem.saveTicket({
+//        eventTitle: document.getElementById('display-title').innerText,
+//        eventDate: document.getElementById('display-date').innerText,
+//        eventDateRaw: "2026-04-12" // Эту дату админ должен передавать в формате YYYY-MM-DD
+//    });
+// }
