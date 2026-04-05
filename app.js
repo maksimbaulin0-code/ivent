@@ -1,5 +1,5 @@
 const tg = window.Telegram.WebApp;
-const N8N_WEBHOOK_URL = 'ВАШ_N8N_WEBHOOK_URL'; // Подставь свой URL
+const N8N_WEBHOOK_URL = 'https://scarface.app.n8n.cloud/webhook-test/4958d6af-6db7-4428-bffc-cf0b60d9d6c5'; // Подставь свой URL
 
 tg.expand();
 
