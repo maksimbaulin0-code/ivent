@@ -1,78 +1,1017 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ivent Bot</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Renerie Ciel</title>
+
+  <!-- Telegram WebApp SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ─── VARIABLES ─────────────────────────────────────────────── */
+    :root {
+      --bg:        #080808;
+      --surface:   #0f0f0f;
+      --border:    #1e1e1e;
+      --border-hi: #2e2e2e;
+      --text:      #d4cfcb;
+      --text-dim:  #5a5652;
+      --text-muted:#2e2b29;
+      --accent:    #c8b89a;
+      --accent-dim:#6b5d4e;
+      --danger:    #8b3a3a;
+      --danger-hi: #b04444;
+      --success:   #3a6b4a;
+      --success-hi:#4a8b5e;
+      --font-serif: 'Cormorant Garamond', serif;
+      --font-mono:  'Courier Prime', monospace;
+    }
+
+    /* ─── RESET & BASE ──────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+      overscroll-behavior: none;
+    }
+
+    /* ─── NOISE TEXTURE OVERLAY ─────────────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 1000;
+      opacity: 0.6;
+    }
+
+    /* ─── APP SHELL ─────────────────────────────────────────────── */
+    #app {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      max-width: 480px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    /* ─── HEADER ────────────────────────────────────────────────── */
+    .header {
+      padding: 28px 24px 20px;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+
+    .header-brand {
+      font-family: var(--font-serif);
+      font-size: 22px;
+      font-weight: 300;
+      letter-spacing: 0.18em;
+      color: var(--accent);
+      text-transform: uppercase;
+    }
+
+    .header-sub {
+      font-size: 9px;
+      letter-spacing: 0.35em;
+      color: var(--text-dim);
+      margin-top: 4px;
+      text-transform: uppercase;
+    }
+
+    .header-status {
+      position: absolute;
+      top: 28px; right: 24px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+
+    .status-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--success-hi);
+      animation: pulse 2.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* ─── NAVIGATION ────────────────────────────────────────────── */
+    .nav {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-tab {
+      flex: 1;
+      padding: 14px 8px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      border-bottom: 1px solid transparent;
+      transition: color 0.2s, border-color 0.2s;
+      position: relative;
+      top: 1px;
+    }
+
+    .nav-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    /* ─── SCREENS ───────────────────────────────────────────────── */
+    .screen { display: none; padding: 24px; flex: 1; }
+    .screen.active { display: block; }
+
+    /* ─── SECTION TITLES ────────────────────────────────────────── */
+    .section-label {
+      font-size: 8px;
+      letter-spacing: 0.5em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ─── FORM ──────────────────────────────────────────────────── */
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 8px;
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+    }
+
+    .form-input {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0;
+      padding: 12px 14px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    .form-input:focus {
+      border-color: var(--accent-dim);
+    }
+
+    .form-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .form-input.error {
+      border-color: var(--danger-hi);
+    }
+
+    .form-error {
+      font-size: 9px;
+      letter-spacing: 0.15em;
+      color: var(--danger-hi);
+      margin-top: 6px;
+      display: none;
+    }
+
+    .form-error.visible { display: block; }
+
+    /* ─── EVENT SELECT ──────────────────────────────────────────── */
+    .event-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    .event-card {
+      border: 1px solid var(--border);
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      position: relative;
+    }
+
+    .event-card:hover { border-color: var(--border-hi); }
+
+    .event-card.selected {
+      border-color: var(--accent-dim);
+      background: rgba(200, 184, 154, 0.04);
+    }
+
+    .event-card.selected::before {
+      content: '✓';
+      position: absolute;
+      top: 12px; right: 14px;
+      font-size: 10px;
+      color: var(--accent);
+    }
+
+    .event-name {
+      font-family: var(--font-serif);
+      font-size: 16px;
+      font-weight: 300;
+      color: var(--text);
+      letter-spacing: 0.06em;
+    }
+
+    .event-meta {
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      color: var(--text-dim);
+      margin-top: 5px;
+      text-transform: uppercase;
+    }
+
+    /* ─── BUTTON ────────────────────────────────────────────────── */
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      background: var(--accent);
+      border: none;
+      border-radius: 0;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      color: var(--bg);
+      cursor: pointer;
+      transition: opacity 0.2s;
+      margin-top: 8px;
+    }
+
+    .btn:hover { opacity: 0.85; }
+    .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border-hi);
+      color: var(--text-dim);
+    }
+
+    .btn-outline:hover { border-color: var(--accent-dim); color: var(--accent); opacity: 1; }
+
+    /* ─── TOAST NOTIFICATION ────────────────────────────────────── */
+    .toast {
+      position: fixed;
+      bottom: 24px; left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--surface);
+      border: 1px solid var(--border-hi);
+      padding: 12px 20px;
+      font-size: 10px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--text);
+      white-space: nowrap;
+      z-index: 999;
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.success { border-color: var(--success-hi); color: var(--success-hi); }
+    .toast.error { border-color: var(--danger-hi); color: var(--danger-hi); }
+
+    /* ─── TICKET CARD ───────────────────────────────────────────── */
+    .ticket-card {
+      border: 1px solid var(--border);
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+
+    .ticket-header {
+      padding: 16px;
+      border-bottom: 1px dashed var(--border-hi);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .ticket-event-name {
+      font-family: var(--font-serif);
+      font-size: 18px;
+      font-weight: 300;
+      letter-spacing: 0.06em;
+    }
+
+    .ticket-badge {
+      font-size: 8px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      padding: 4px 8px;
+      border: 1px solid var(--success-hi);
+      color: var(--success-hi);
+    }
+
+    .ticket-body {
+      padding: 16px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .ticket-field-label {
+      font-size: 8px;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 4px;
+    }
+
+    .ticket-field-value {
+      font-size: 12px;
+      color: var(--text);
+    }
+
+    .ticket-code {
+      padding: 12px 16px;
+      border-top: 1px dashed var(--border-hi);
+      font-size: 10px;
+      letter-spacing: 0.3em;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    /* ─── EMPTY STATE ───────────────────────────────────────────── */
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+    }
+
+    .empty-icon {
+      font-size: 32px;
+      display: block;
+      margin-bottom: 16px;
+      opacity: 0.4;
+    }
+
+    .empty-title {
+      font-family: var(--font-serif);
+      font-size: 20px;
+      font-weight: 300;
+      letter-spacing: 0.1em;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+    }
+
+    .empty-sub {
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    /* ─── PROFILE ───────────────────────────────────────────────── */
+    .profile-avatar {
+      width: 56px; height: 56px;
+      border: 1px solid var(--border-hi);
+      background: var(--surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-serif);
+      font-size: 24px;
+      font-weight: 300;
+      color: var(--accent);
+      letter-spacing: 0.05em;
+      margin-bottom: 20px;
+    }
+
+    .profile-name {
+      font-family: var(--font-serif);
+      font-size: 24px;
+      font-weight: 300;
+      letter-spacing: 0.1em;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .profile-id {
+      font-size: 9px;
+      letter-spacing: 0.3em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      margin-bottom: 28px;
+    }
+
+    .profile-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .profile-row-label {
+      font-size: 9px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+
+    .profile-row-value {
+      font-size: 12px;
+      color: var(--text);
+    }
+
+    /* ─── LOADER ─────────────────────────────────────────────────── */
+    .loader {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 20px 0;
+      color: var(--text-dim);
+      font-size: 9px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+    }
+
+    .loader-bar {
+      width: 24px; height: 1px;
+      background: var(--accent-dim);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .loader-bar::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--accent);
+      animation: sweep 1.2s ease-in-out infinite;
+    }
+
+    @keyframes sweep {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    /* ─── DIVIDER ────────────────────────────────────────────────── */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 20px 0;
+    }
+
+    /* ─── SCREEN FADE-IN ─────────────────────────────────────────── */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .screen.active { animation: fadeIn 0.3s ease forwards; }
+
+    /* ─── AGE GATE ───────────────────────────────────────────────── */
+    .age-gate {
+      border: 1px solid var(--danger);
+      padding: 16px;
+      margin-bottom: 20px;
+      display: none;
+    }
+
+    .age-gate.visible { display: block; }
+
+    .age-gate-title {
+      font-size: 9px;
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      color: var(--danger-hi);
+      margin-bottom: 6px;
+    }
+
+    .age-gate-text {
+      font-size: 11px;
+      color: var(--text-dim);
+      line-height: 1.6;
+    }
+
+    /* ─── INFO BOX ───────────────────────────────────────────────── */
+    .info-box {
+      border: 1px solid var(--border-hi);
+      padding: 14px 16px;
+      margin-bottom: 20px;
+      font-size: 10px;
+      line-height: 1.7;
+      color: var(--text-dim);
+      letter-spacing: 0.05em;
+    }
+
+    .info-box strong {
+      color: var(--accent);
+      font-weight: 400;
+    }
+  </style>
 </head>
 <body>
-    <div id="app-viewport">
-        <main id="app-content">
-            <section id="view-home" class="view">
-                <div class="ticket-card">
-                    <span class="badge">NEXT EVENT</span>
-                    <h1 id="display-title">NEON NIGHTS</h1>
-                    <p id="display-desc">Techno & Industrial set by Resident DJs. Entrance by guestlist only.</p>
-                    <div class="event-info">
-                        <span id="display-date">📅 12 апреля, 23:00 📍 UNDERGROUND CLUB</span>
-                    </div>
-                </div>
 
-                <form id="pass-form">
-                    <div class="input-group">
-                        <label>Дата рождения</label>
-                        <input type="date" id="birth-date" required>
-                    </div>
-                    <div class="input-group">
-                        <label>Номер телефона</label>
-                        <input type="tel" id="phone" placeholder="+7 (999) 000-00-00" required>
-                    </div>
-                    <button type="submit" id="submit-btn" disabled>ПОЛУЧИТЬ ПРОХОДКУ</button>
-                </form>
-            </section>
+<div id="app">
 
-            <section id="view-tickets" class="view hidden">
-                <h2 class="page-title">Мои билеты</h2>
-                <div id="tickets-container">
-                    <div class="empty-state">У вас пока нет билетов</div>
-                </div>
-            </section>
-
-            <section id="view-profile" class="view hidden">
-                <div class="profile-header">
-                    <h2 id="user-full-name">Профиль</h2>
-                    <p id="user-handle">@username</p>
-                </div>
-                
-                <button class="btn-admin-toggle" onclick="toggleAdminPanel()">⚙️ Админ-панель</button>
-
-                <div id="admin-panel" class="hidden admin-card">
-                    <h3>Редактировать ивент</h3>
-                    <input type="text" id="edit-title" placeholder="Название мероприятия">
-                    <textarea id="edit-desc" placeholder="Описание"></textarea>
-                    <input type="text" id="edit-date" placeholder="Дата и время">
-                    <button class="btn-save" onclick="updateEventData()">ОБНОВИТЬ ИВЕНТ</button>
-                </div>
-            </section>
-        </main>
-
-        <nav class="bottom-nav">
-            <button class="nav-item active" onclick="switchView('home', this)">
-                <span class="nav-icon">🏠</span>
-                <span class="nav-label">ГЛАВНАЯ</span>
-            </button>
-            <button class="nav-item" onclick="switchView('tickets', this)">
-                <span class="nav-icon">🎟️</span>
-                <span class="nav-label">БИЛЕТЫ</span>
-            </button>
-            <button class="nav-item" onclick="switchView('profile', this)">
-                <span class="nav-icon">👤</span>
-                <span class="nav-label">ПРОФИЛЬ</span>
-            </button>
-        </nav>
+  <!-- ── HEADER ─────────────────────────────────────────────────── -->
+  <header class="header">
+    <div class="header-brand">Renerie Ciel</div>
+    <div class="header-sub">Order of Discipline</div>
+    <div class="header-status">
+      <span class="status-dot"></span>
+      <span id="status-text">Система активна</span>
     </div>
-    <script src="app.js"></script>
+  </header>
+
+  <!-- ── NAV TABS ───────────────────────────────────────────────── -->
+  <nav class="nav">
+    <button class="nav-tab active" data-tab="register">🎟 Доступ</button>
+    <button class="nav-tab" data-tab="tickets">📅 Билеты</button>
+    <button class="nav-tab" data-tab="profile">🔒 Профиль</button>
+  </nav>
+
+  <!-- ══ SCREEN: REGISTER ════════════════════════════════════════ -->
+  <section id="screen-register" class="screen active">
+    <p class="section-label">Запрос доступа к мероприятию</p>
+
+    <!-- Confirmed Ticket Banner (скрыт по умолчанию) -->
+    <div id="ticket-confirmed" class="info-box" style="display:none; border-color: var(--success-hi); color: var(--success-hi);">
+      🎟 <strong>Доступ подтвержден.</strong> Ваша бронь зафиксирована в системе. Ожидайте уведомления.
+    </div>
+
+    <!-- Age Gate -->
+    <div class="age-gate" id="age-gate">
+      <div class="age-gate-title">// Доступ заблокирован</div>
+      <div class="age-gate-text">Регистрация доступна только лицам старше 18 лет. Ваши данные не были переданы в систему.</div>
+    </div>
+
+    <!-- Event Selection -->
+    <div class="form-group">
+      <span class="form-label">Выберите мероприятие</span>
+      <div class="event-list" id="event-list">
+        <!-- Генерируется JS -->
+      </div>
+    </div>
+
+    <!-- DOB -->
+    <div class="form-group">
+      <label class="form-label" for="inp-dob">Дата рождения</label>
+      <input class="form-input" type="date" id="inp-dob" />
+      <span class="form-error" id="err-dob">Введите корректную дату рождения</span>
+    </div>
+
+    <!-- Phone -->
+    <div class="form-group">
+      <label class="form-label" for="inp-phone">Номер телефона</label>
+      <input class="form-input" type="tel" id="inp-phone" placeholder="+7 000 000 00 00" />
+      <span class="form-error" id="err-phone">Введите корректный номер</span>
+    </div>
+
+    <button class="btn" id="btn-register">Подтвердить запрос</button>
+    <div id="reg-loader" style="display:none" class="loader">
+      <span class="loader-bar"></span>
+      <span>Передача данных...</span>
+    </div>
+  </section>
+
+  <!-- ══ SCREEN: TICKETS ═════════════════════════════════════════ -->
+  <section id="screen-tickets" class="screen">
+    <p class="section-label">Активные брони</p>
+
+    <div id="tickets-loader" class="loader">
+      <span class="loader-bar"></span>
+      <span>Запрос к системе...</span>
+    </div>
+
+    <div id="tickets-list" style="display:none"></div>
+
+    <div id="tickets-empty" class="empty-state" style="display:none">
+      <span class="empty-icon">🎟</span>
+      <div class="empty-title">Брони не найдены</div>
+      <div class="empty-sub">Зарегистрируйтесь на мероприятие</div>
+    </div>
+  </section>
+
+  <!-- ══ SCREEN: PROFILE ════════════════════════════════════════ -->
+  <section id="screen-profile" class="screen">
+    <p class="section-label">Идентификационные данные</p>
+
+    <div class="profile-avatar" id="profile-avatar">—</div>
+    <div class="profile-name" id="profile-name">—</div>
+    <div class="profile-id" id="profile-uid">ID: —</div>
+
+    <div class="profile-row">
+      <span class="profile-row-label">Username</span>
+      <span class="profile-row-value" id="profile-username">—</span>
+    </div>
+    <div class="profile-row">
+      <span class="profile-row-label">Telegram ID</span>
+      <span class="profile-row-value" id="profile-tg-id">—</span>
+    </div>
+    <div class="profile-row">
+      <span class="profile-row-label">Язык</span>
+      <span class="profile-row-value" id="profile-lang">—</span>
+    </div>
+    <div class="profile-row">
+      <span class="profile-row-label">Статус</span>
+      <span class="profile-row-value" style="color: var(--success-hi);" id="profile-status">—</span>
+    </div>
+
+    <hr class="divider" />
+    <button class="btn btn-outline" id="btn-refresh-profile">Обновить данные</button>
+  </section>
+
+</div>
+
+<!-- ── TOAST ───────────────────────────────────────────────────── -->
+<div class="toast" id="toast"></div>
+
+<!-- ════════════════════════════════════════════════════════════════
+     JAVASCRIPT — CORE APPLICATION LOGIC
+═════════════════════════════════════════════════════════════════ -->
+<script>
+'use strict';
+
+/* ── 1. CONFIGURATION ───────────────────────────────────────────
+   Замените URL на ваши реальные n8n вебхуки.
+   В n8n: Webhook node → Production URL → скопируйте сюда.
+─────────────────────────────────────────────────────────────── */
+const CONFIG = {
+  CHECK_TICKET_URL:  'https://YOUR_N8N_HOST/webhook/renerie-check',
+  REGISTER_URL:      'https://YOUR_N8N_HOST/webhook/renerie-register',
+
+  // Список мероприятий (можно подгружать с n8n динамически)
+  EVENTS: [
+    { id: 'evt_001', name: 'NOCTURNE I',   date: '12.07.2025', venue: 'Москва, локация TBA' },
+    { id: 'evt_002', name: 'DISCIPLINE',   date: '19.07.2025', venue: 'СПб, закрытая площадка' },
+    { id: 'evt_003', name: 'VOID SESSION', date: '02.08.2025', venue: 'Онлайн-трансляция'      },
+  ],
+
+  MIN_AGE: 18,
+};
+
+/* ── 2. TELEGRAM SDK INIT ───────────────────────────────────── */
+const tg = window.Telegram?.WebApp;
+
+let TG_USER = {
+  id:         null,
+  username:   null,
+  first_name: '',
+  last_name:  '',
+  language:   'ru',
+};
+
+let USER_KEY = '';   // primary key для n8n
+
+(function initTelegram() {
+  if (tg) {
+    tg.ready();
+    tg.expand();
+    tg.enableClosingConfirmation();
+
+    const u = tg.initDataUnsafe?.user;
+    if (u) {
+      TG_USER.id         = u.id;
+      TG_USER.username   = u.username  || null;
+      TG_USER.first_name = u.first_name || '';
+      TG_USER.last_name  = u.last_name  || '';
+      TG_USER.language   = u.language_code || 'ru';
+    }
+  }
+
+  // Primary key: username или id_XXXX
+  USER_KEY = TG_USER.username
+    ? TG_USER.username
+    : (TG_USER.id ? `id_${TG_USER.id}` : `id_demo_${Date.now()}`);
+
+  renderProfile();
+})();
+
+/* ── 3. NAV ─────────────────────────────────────────────────── */
+const tabs    = document.querySelectorAll('.nav-tab');
+const screens = document.querySelectorAll('.screen');
+
+tabs.forEach(tab => {
+  tab.addEventListener('click', () => {
+    const target = tab.dataset.tab;
+
+    tabs.forEach(t => t.classList.remove('active'));
+    screens.forEach(s => s.classList.remove('active'));
+
+    tab.classList.add('active');
+    document.getElementById(`screen-${target}`).classList.add('active');
+
+    if (target === 'tickets') loadTickets();
+  });
+});
+
+/* ── 4. EVENTS LIST ─────────────────────────────────────────── */
+let selectedEvent = null;
+
+(function renderEvents() {
+  const list = document.getElementById('event-list');
+  CONFIG.EVENTS.forEach(ev => {
+    const card = document.createElement('div');
+    card.className = 'event-card';
+    card.dataset.id = ev.id;
+    card.innerHTML = `
+      <div class="event-name">${ev.name}</div>
+      <div class="event-meta">📅 ${ev.date} &nbsp;·&nbsp; ${ev.venue}</div>
+    `;
+    card.addEventListener('click', () => {
+      document.querySelectorAll('.event-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      selectedEvent = ev;
+    });
+    list.appendChild(card);
+  });
+})();
+
+/* ── 5. AGE VALIDATION ──────────────────────────────────────── */
+function getAge(dob) {
+  const today = new Date();
+  const birth = new Date(dob);
+  let age = today.getFullYear() - birth.getFullYear();
+  const m = today.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+  return age;
+}
+
+function isValidPhone(phone) {
+  return /^\+?[0-9\s\-\(\)]{7,15}$/.test(phone.trim());
+}
+
+/* ── 6. REGISTRATION ────────────────────────────────────────── */
+document.getElementById('btn-register').addEventListener('click', async () => {
+  // Reset errors
+  ['dob', 'phone'].forEach(f => {
+    document.getElementById(`inp-${f}`).classList.remove('error');
+    document.getElementById(`err-${f}`).classList.remove('visible');
+  });
+  document.getElementById('age-gate').classList.remove('visible');
+
+  const dob   = document.getElementById('inp-dob').value;
+  const phone = document.getElementById('inp-phone').value;
+  let valid   = true;
+
+  if (!dob) {
+    document.getElementById('inp-dob').classList.add('error');
+    document.getElementById('err-dob').classList.add('visible');
+    valid = false;
+  } else if (getAge(dob) < CONFIG.MIN_AGE) {
+    document.getElementById('age-gate').classList.add('visible');
+    tg?.HapticFeedback?.notificationOccurred('error');
+    return;
+  }
+
+  if (!isValidPhone(phone)) {
+    document.getElementById('inp-phone').classList.add('error');
+    document.getElementById('err-phone').classList.add('visible');
+    valid = false;
+  }
+
+  if (!selectedEvent) {
+    showToast('Выберите мероприятие', 'error');
+    return;
+  }
+
+  if (!valid) return;
+
+  // Send to n8n
+  setLoading(true);
+
+  const payload = {
+    username: USER_KEY,
+    phone:    phone.trim(),
+    dob:      dob,
+    event:    selectedEvent.id,
+    event_name: selectedEvent.name,
+    tg_id:    TG_USER.id,
+    timestamp: new Date().toISOString(),
+  };
+
+  try {
+    const res = await fetch(CONFIG.REGISTER_URL, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(payload),
+    });
+
+    if (res.ok) {
+      const data = await res.json().catch(() => ({}));
+      tg?.HapticFeedback?.notificationOccurred('success');
+      showToast('Данные приняты. Доступ запрошен.', 'success');
+
+      // Show confirmed banner, hide form elements
+      document.getElementById('ticket-confirmed').style.display = 'block';
+      document.getElementById('btn-register').style.display = 'none';
+
+      // Update profile status
+      document.getElementById('profile-status').textContent = 'Бронь активна';
+    } else if (res.status === 404 || res.status === 500) {
+      showToast('Сервер временно недоступен. Попробуйте позже.', 'error');
+    } else {
+      showToast('Ошибка передачи данных.', 'error');
+    }
+  } catch (err) {
+    showToast('Нет соединения с сервером.', 'error');
+    console.error('[REGISTER ERROR]', err);
+  } finally {
+    setLoading(false);
+  }
+});
+
+function setLoading(active) {
+  document.getElementById('btn-register').disabled = active;
+  document.getElementById('reg-loader').style.display = active ? 'flex' : 'none';
+}
+
+/* ── 7. CHECK TICKET ────────────────────────────────────────── */
+async function checkTicket() {
+  try {
+    const res = await fetch(CONFIG.CHECK_TICKET_URL, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ username: USER_KEY }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data.hasTicket === true) {
+        document.getElementById('ticket-confirmed').style.display = 'block';
+        document.getElementById('btn-register').style.display = 'none';
+        document.getElementById('profile-status').textContent = 'Бронь активна';
+      }
+      return data;
+    }
+  } catch (err) {
+    console.warn('[CHECK_TICKET]', err);
+  }
+  return null;
+}
+
+/* ── 8. LOAD TICKETS TAB ────────────────────────────────────── */
+async function loadTickets() {
+  const loader = document.getElementById('tickets-loader');
+  const list   = document.getElementById('tickets-list');
+  const empty  = document.getElementById('tickets-empty');
+
+  loader.style.display = 'flex';
+  list.style.display   = 'none';
+  empty.style.display  = 'none';
+
+  try {
+    const res = await fetch(CONFIG.CHECK_TICKET_URL, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ username: USER_KEY }),
+    });
+
+    loader.style.display = 'none';
+
+    if (!res.ok) {
+      showToast('Сервер временно недоступен.', 'error');
+      empty.style.display = 'block';
+      return;
+    }
+
+    const data = await res.json();
+
+    if (data.hasTicket && data.tickets?.length) {
+      list.innerHTML = '';
+      data.tickets.forEach(t => {
+        list.innerHTML += renderTicketCard(t);
+      });
+      list.style.display = 'block';
+
+      // Sync with register screen
+      document.getElementById('ticket-confirmed').style.display = 'block';
+      document.getElementById('btn-register').style.display = 'none';
+      document.getElementById('profile-status').textContent = 'Бронь активна';
+    } else if (data.hasTicket) {
+      // hasTicket true but no tickets array — show generic confirmed
+      list.innerHTML = renderTicketCard({ event_name: 'Мероприятие подтверждено', date: '—', venue: '—', code: USER_KEY });
+      list.style.display = 'block';
+    } else {
+      empty.style.display = 'block';
+    }
+
+  } catch (err) {
+    loader.style.display = 'none';
+    showToast('Нет соединения с сервером.', 'error');
+    empty.style.display  = 'block';
+    console.error('[LOAD_TICKETS]', err);
+  }
+}
+
+function renderTicketCard(t) {
+  const code = t.code || t.id || USER_KEY.toUpperCase();
+  return `
+    <div class="ticket-card">
+      <div class="ticket-header">
+        <div class="ticket-event-name">${t.event_name || t.name || '—'}</div>
+        <div class="ticket-badge">Активен</div>
+      </div>
+      <div class="ticket-body">
+        <div>
+          <div class="ticket-field-label">Дата</div>
+          <div class="ticket-field-value">${t.date || t.event_date || '—'}</div>
+        </div>
+        <div>
+          <div class="ticket-field-label">Площадка</div>
+          <div class="ticket-field-value">${t.venue || '—'}</div>
+        </div>
+        <div>
+          <div class="ticket-field-label">Держатель</div>
+          <div class="ticket-field-value">${TG_USER.username ? '@' + TG_USER.username : USER_KEY}</div>
+        </div>
+        <div>
+          <div class="ticket-field-label">Статус</div>
+          <div class="ticket-field-value" style="color:var(--success-hi)">Подтверждено</div>
+        </div>
+      </div>
+      <div class="ticket-code">REF: ${code.toString().toUpperCase()}</div>
+    </div>
+  `;
+}
+
+/* ── 9. PROFILE ─────────────────────────────────────────────── */
+function renderProfile() {
+  const fullName = [TG_USER.first_name, TG_USER.last_name].filter(Boolean).join(' ') || 'Пользователь';
+  const initial  = fullName.charAt(0).toUpperCase();
+
+  document.getElementById('profile-avatar').textContent   = initial;
+  document.getElementById('profile-name').textContent     = fullName;
+  document.getElementById('profile-uid').textContent      = `UID: ${USER_KEY}`;
+  document.getElementById('profile-username').textContent = TG_USER.username ? `@${TG_USER.username}` : '—';
+  document.getElementById('profile-tg-id').textContent    = TG_USER.id || '—';
+  document.getElementById('profile-lang').textContent     = TG_USER.language?.toUpperCase() || '—';
+  document.getElementById('profile-status').textContent   = 'Авторизован';
+}
+
+document.getElementById('btn-refresh-profile').addEventListener('click', async () => {
+  showToast('Обновление...', '');
+  renderProfile();
+  await checkTicket();
+  showToast('Данные синхронизированы.', 'success');
+});
+
+/* ── 10. TOAST ──────────────────────────────────────────────── */
+let toastTimer;
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className   = `toast ${type}`;
+
+  clearTimeout(toastTimer);
+  requestAnimationFrame(() => {
+    t.classList.add('show');
+    toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+  });
+}
+
+/* ── 11. ON MOUNT: auto-check ticket ───────────────────────── */
+window.addEventListener('DOMContentLoaded', () => {
+  checkTicket();
+});
+
+/* ── 12. TELEGRAM BACK BUTTON ───────────────────────────────── */
+if (tg) {
+  tg.BackButton.onClick(() => {
+    const activeTab = document.querySelector('.nav-tab.active')?.dataset?.tab;
+    if (activeTab !== 'register') {
+      document.querySelector('[data-tab="register"]').click();
+      tg.BackButton.hide();
+    }
+  });
+}
+
+</script>
 </body>
 </html>
