@@ -1,69 +1,81 @@
+:root {
+    --bg-color: #0a0a0a;
+    --accent-color: #ffffff;
+    --error-color: #ff4d4d;
+    --input-bg: #1a1a1a;
+}
+
 body {
-    background-color: #1a1a1a;
-    color: #ffffff;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--accent-color);
+    font-family: 'Inter', -apple-system, sans-serif;
     margin: 0;
     padding: 20px;
     display: flex;
     justify-content: center;
 }
 
-#app {
-    width: 100%;
-    max-width: 400px;
-    text-align: center;
-}
+#app { width: 100%; max-width: 400px; position: relative; }
 
-.view {
-    display: flex;
-    flex-direction: column;
-    gap: 15px; /* Отступы между всеми элементами */
-}
-
-.hidden { display: none; }
-
-.input-group {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-input, textarea {
-    background: #2b2b2b;
+.event-header {
+    background: linear-gradient(145deg, #1e1e1e, #111);
+    padding: 25px;
+    border-radius: 20px;
+    margin-bottom: 30px;
     border: 1px solid #333;
-    border-radius: 10px;
-    padding: 12px;
-    color: white;
-    font-size: 16px;
-    outline: none;
 }
 
-input:focus { border-color: #007aff; }
+.badge {
+    display: inline-block;
+    background: #fff;
+    color: #000;
+    padding: 4px 10px;
+    font-size: 10px;
+    font-weight: bold;
+    text-transform: uppercase;
+    border-radius: 5px;
+    margin-bottom: 15px;
+}
 
-textarea {
-    resize: none;
-    height: 80px;
+h1 { font-size: 2rem; margin: 0 0 10px 0; letter-spacing: -1px; }
+
+.input-group { margin-bottom: 20px; }
+
+label { display: block; font-size: 12px; opacity: 0.6; margin-bottom: 8px; }
+
+input {
+    width: 100%;
+    padding: 15px;
+    background: var(--input-bg);
+    border: 1px solid #333;
+    border-radius: 12px;
+    color: white;
+    box-sizing: border-box;
 }
 
 button {
-    padding: 15px;
-    border-radius: 12px;
+    width: 100%;
+    padding: 18px;
+    background: white;
+    color: black;
     border: none;
+    border-radius: 12px;
     font-weight: bold;
     cursor: pointer;
-    transition: 0.2s;
+    transition: 0.3s;
 }
 
-.primary-btn { background: #ffffff; color: #000; }
-.secondary-btn { background: transparent; color: #fff; border: 1px solid #333; }
-#submit-btn { background: #ffffff; color: #000; }
-#submit-btn:disabled { opacity: 0.3; }
+button:disabled { opacity: 0.3; }
 
-.error { color: #ff4d4d; font-size: 12px; display: none; }
-
-.settings-btn {
-    background: none;
-    border: none;
-    color: #555;
-    margin-top: 20px;
+#admin-toggle {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 50px;
+    background: #222;
+    color: white;
+    opacity: 0.5;
 }
+
+.hidden { display: none; }
+.error-msg { color: var(--error-color); font-size: 11px; display: none; margin-top: 5px; }

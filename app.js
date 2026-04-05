@@ -8,8 +8,16 @@ const errorMsg = document.getElementById('age-error');
 
 // 1. Проверка возраста (18+)
 birthInput.addEventListener('change', (e) => {
-    const age = calculateAge(e.target.value);
+    const birthDate = new Date(e.target.value);
+    const today = new Date();
     
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+    }
+
     if (age >= 18) {
         submitBtn.disabled = false;
         errorMsg.style.display = 'none';
@@ -21,71 +29,31 @@ birthInput.addEventListener('change', (e) => {
     }
 });
 
-function calculateAge(birthDate) {
-    const today = new Date();
-    const birth = new Date(birthDate);
-    let age = today.getFullYear() - birth.getFullYear();
-    const m = today.getMonth() - birth.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
-        age--;
-    }
-    return age;
-}
-
-// 2. Переключение админки
+// 2. Логика Админ-панели
 function toggleAdmin() {
     document.getElementById('user-view').classList.toggle('hidden');
     document.getElementById('admin-view').classList.toggle('hidden');
 }
 
-// 3. Отправка вебхука на n8n
-async function sendToN8N(data) {
-    const WEBHOOK_URL = 'ТВОЙ_URL_ИЗ_N8N'; // <-- ВСТАВЬ СЮДА ССЫЛКУ ИЗ N8N
-
-    try {
-        await fetch(WEBHOOK_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-        tg.showAlert("Данные успешно отправлены!");
-    } catch (err) {
-        console.error("Ошибка n8n:", err);
-    }
-}
-
-// 4. Главная функция обновления и отправки
 function updateEvent() {
-    const name = document.getElementById('user-name').value;
-    const phone = document.getElementById('user-phone').value;
-    const birth = birthInput.value;
-    
-    const title = document.getElementById('edit-title').value;
-    const desc = document.getElementById('edit-desc').value;
-    const date = document.getElementById('edit-date').value;
+    const newTitle = document.getElementById('edit-title').value;
+    const newDesc = document.getElementById('edit-desc').value;
+    const newDate = document.getElementById('edit-date').value;
 
-    // Сбор данных для n8n
-    const payload = {
-        user_name: name,
-        user_phone: phone,
-        user_age: calculateAge(birth),
-        event_name: title || "Без названия",
-        event_description: desc,
-        event_date: date
-    };
+    if(newTitle) document.getElementById('display-title').innerText = newTitle;
+    if(newDesc) document.getElementById('display-desc').innerText = newDesc;
+    if(newDate) document.getElementById('display-date').innerText = "📅 " + newDate;
 
-    // Обновляем текст на экране (на русском)
-    if(title) document.getElementById('display-title').innerText = title;
-    if(desc) document.getElementById('display-desc').innerText = desc;
-    if(date) document.getElementById('display-date').innerText = "📅 " + date;
-
-    // Если заполнены имя и телефон — шлем вебхук
-    if(name && phone) {
-        sendToN8N(payload);
-    } else if (!document.getElementById('admin-view').classList.contains('hidden')) {
-        // Если мы в админке, просто закрываем её
-        toggleAdmin();
-    } else {
-        tg.showAlert("Заполните имя и телефон!");
-    }
+    toggleAdmin(); // Возвращаемся к просмотру
 }
+
+// 3. Отправка данных в бота
+document.getElementById('pass-form').onsubmit = (e) => {
+    e.preventDefault();
+    const data = {
+        phone: document.getElementById('phone').value,
+        dob: birthInput.value,
+        event: document.getElementById('display-title').innerText
+    };
+    tg.sendData(JSON.stringify(data));
+};
