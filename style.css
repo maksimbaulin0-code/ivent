@@ -1,39 +1,40 @@
-:root {
-    --bg-color: #0c0c0d; /* Глубокий черный */
-    --card-bg: #161618;  /* Чуть светлее для блоков */
-    --input-bg: #1e1e20;
-    --text-main: #ffffff;
-    --text-dim: #707075; /* Тусклый серый для неактивных элементов */
-    --accent: #ffffff;   /* Чистый белый для акцентов */
-    --error: #ff4444;
-    
-    /* Шрифты */
-    --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+/* 1. ГЛОБАЛЬНЫЙ СБРОС (Чтобы всё считалось одинаково) */
+* {
+    box-sizing: border-box; /* Это самое важное для одинаковой длины полей */
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+:root {
+    --bg-color: #0c0c0d;
+    --card-bg: #161618;
+    --input-bg: #1e1e20;
+    --text-main: #ffffff;
+    --text-dim: #707075;
+    --accent: #ffffff;
+}
 
 body {
     background-color: var(--bg-color);
     color: var(--text-main);
-    font-family: var(--font-main);
+    font-family: -apple-system, system-ui, sans-serif;
     height: 100vh;
     display: flex;
     flex-direction: column;
-    overflow: hidden; /* Основной скролл внутри контента */
+    overflow: hidden;
 }
 
-/* Контейнер для контента */
+/* 2. КОНТЕЙНЕР ДЛЯ КОНТЕНТА */
 #app-content {
     flex: 1;
     overflow-y: auto;
     padding: 20px;
-    padding-bottom: 100px; /* Отступ, чтобы контент не перекрывался меню */
+    padding-bottom: 100px;
+    -webkit-overflow-scrolling: touch;
 }
 
-.view.hidden { display: none !important; }
-
-/* --- Дизайн Билета и Формы (без изменений) --- */
+/* 3. КАРТОЧКА ИВЕНТА */
 .ticket-card {
     background: var(--card-bg);
     padding: 25px;
@@ -41,80 +42,114 @@ body {
     border: 1px solid #222;
     margin-bottom: 25px;
 }
-.badge { display: inline-block; background: #fff; color: #000; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 15px; }
-h1 { font-size: 26px; font-weight: 800; margin-bottom: 8px; letter-spacing: -1px; }
-.ticket-card p { color: var(--text-dim); font-size: 14px; margin-bottom: 15px; }
-.event-info { color: var(--text-dim); font-size: 14px; }
-.input-group { margin-bottom: 20px; }
-label { display: block; font-size: 13px; color: var(--text-dim); margin-bottom: 8px; }
-input { width: 100%; padding: 16px; background: var(--input-bg); border: 1px solid #333; border-radius: 12px; color: #fff; font-size: 16px; }
-button#submit-btn {
-    width: 100%; padding: 18px; background: white; color: black; border: none; border-radius: 12px; font-weight: 700; font-size: 15px; text-transform: uppercase;
+
+.badge {
+    display: inline-block;
+    background: #fff;
+    color: #000;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-bottom: 15px;
 }
-button#submit-btn:disabled { opacity: 0.2; }
 
+h1 { font-size: 26px; margin-bottom: 8px; }
 
-/* --- НОВОЕ СТИЛЬНОЕ МЕНЮ (Glassmorphism) --- */
+/* 4. ИСПРАВЛЕННЫЕ ПОЛЯ ВВОДА (ТЕПЕРЬ ОДИНАКОВЫЕ) */
+.input-group {
+    margin-bottom: 20px;
+    width: 100%; /* Группа занимает всю ширину */
+}
+
+label {
+    display: block;
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+}
+
+/* Общие стили для всех инпутов */
+input {
+    display: block;
+    width: 100%; /* Растягиваем на всю ширину родителя */
+    height: 54px; /* Фиксированная высота для всех полей */
+    padding: 0 16px; /* Отступы только по бокам */
+    background: var(--input-bg);
+    border: 1px solid #333;
+    border-radius: 12px;
+    color: #fff;
+    font-size: 16px;
+    line-height: 54px; /* Центрируем текст по вертикали */
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+/* Убираем специфические отступы даты в iOS */
+input[type="date"] {
+    position: relative;
+    padding-right: 12px;
+}
+
+/* Ошибка 18 лет */
+.error-msg {
+    color: #ff4444;
+    font-size: 12px;
+    margin-top: 5px;
+    display: none;
+}
+
+/* 5. КНОПКА ОТПРАВКИ */
+button#submit-btn {
+    width: 100%;
+    height: 56px;
+    background: #333;
+    color: var(--text-dim);
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 15px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+button#submit-btn:not(:disabled) {
+    background: #fff;
+    color: #000;
+}
+
+/* 6. СТИЛЬНОЕ МЕНЮ (Glassmorphism) */
 .bottom-nav {
     position: fixed;
-    bottom: 15px; /* Отступ от нижнего края (плавающий эффект) */
+    bottom: 15px;
     left: 15px;
     right: 15px;
     height: 65px;
-    
-    /* Эффект стекла */
-    background: rgba(22, 22, 24, 0.7);
+    background: rgba(22, 22, 24, 0.8);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    
-    /* Обводка и тень */
     border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 30px; /* Сильно скругленные углы */
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-    
+    border-radius: 25px;
     display: flex;
     justify-content: space-around;
     align-items: center;
-    padding: 0 10px;
     z-index: 1000;
 }
 
-/* Элемент меню (кнопка) */
 .nav-item {
     background: none;
     border: none;
-    color: var(--text-dim); /* По умолчанию тусклый */
+    color: var(--text-dim);
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-    width: 30%; /* Равномерное распределение */
-    height: 100%;
+    width: 33%;
 }
 
-/* Активный элемент */
-.nav-item.active {
-    color: var(--accent); /* Становится белым */
-    transform: translateY(-2px); /* Легкий подъем */
-}
+.nav-item.active { color: #fff; }
+.nav-icon { font-size: 20px; margin-bottom: 2px; }
+.nav-label { font-size: 10px; font-weight: 700; text-transform: uppercase; }
 
-/* Стилизация иконок */
-.nav-icon {
-    font-size: 22px; /* Чуть крупнее */
-    margin-bottom: 3px;
-    opacity: 0.6;
-    transition: opacity 0.3s;
-}
-
-.nav-item.active .nav-icon {
-    opacity: 1; /* Полная яркость для активной иконки */
-}
-
-/* Стилизация текста */
-.nav-label {
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
+.view.hidden { display: none !important; }
